@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#4188c9">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+
+    <!-- Apple SinIn -->
+    <meta name="appleid-signin-client-id" content="com.realtouchapp-basic.ccl">
+    <meta name="appleid-signin-scope" content="name email">
+    <meta name="appleid-signin-redirect-uri" content="https://realtouchapp-basic.herokuapp.com/login/apple/callback">
+    <meta name="appleid-signin-state" content="">
+    <meta name="appleid-signin-use-popup" content="false"> <!-- or false defaults to false -->
+
+    <!-- Favicon  -->
+    <link rel="icon" href="/favicon.ico">
+
+    <!-- Core Style CSS -->
+    <link rel="stylesheet" href="/css/public/core-style.css">
+    <link rel="stylesheet" href="/css/public/style.css">
+
+    <!-- CSRF Token -->
+	<meta name="csrf-token" content="eL70ogHQGnFJPa0iNjzZXQKAZphOMU1g3UrQ0vBZ">
+
+    <title>桃園市國小遊戲場資訊查詢網</title>
+
+    <!-- default(語系要先) -->
+    <script src="https://schoolplayground.tyc.edu.tw/lang/zh-TW.js"></script>
+    <script src="https://schoolplayground.tyc.edu.tw/js/public.js"></script>
+    <script src="https://schoolplayground.tyc.edu.tw/js/modal.js"></script>
+    <script src="https://schoolplayground.tyc.edu.tw/js/tools.js"></script>
+    <script src="https://schoolplayground.tyc.edu.tw/js/auth.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://schoolplayground.tyc.edu.tw/css/dashboard.css"/>
+    <link rel="stylesheet" href="https://schoolplayground.tyc.edu.tw/css/public.css"/>
+
+    <script>
+        let api_urls = {
+            auth: {
+                login: 'https://schoolplayground.tyc.edu.tw/api/v1/login',
+                logout: 'https://schoolplayground.tyc.edu.tw/api/v1/logout',
+                register: 'https://schoolplayground.tyc.edu.tw/api/v1/register',
+                sendCheckCode: 'https://schoolplayground.tyc.edu.tw/api/v1/getcode',
+                account: system_url['api_path'] + 'account/',
+            },
+            service: {
+                contactus: 'https://schoolplayground.tyc.edu.tw/api/v1/contactUs',
+            },
+            articles: {
+                base: system_url['api_path']+'articles/',
+            },
+            downloads: {
+                base: system_url['api_path']+'downloads/',
+            },
+            homeimages: {
+                base: system_url['api_path']+'homeimages/',
+            },
+            companies: {
+                base: system_url['api_path']+'companies/',
+            },
+            favorites: {
+                base: system_url['api_path']+'favorites/',
+            },
+            orders: {
+                base: system_url['api_path']+'order/',
+                create: system_url['api_path']+'orders/',
+                list: system_url['api_path']+'orders/list/',
+            },
+        }
+        function doLogout() {
+            modalMessage.init({
+                type: modalMessage.type.NONE,
+                textContent: "進行登出"
+            });
+
+            axios.get("https://schoolplayground.tyc.edu.tw/api/v1/logout")
+            .catch(function(error) {
+                window.location.href = "https://schoolplayground.tyc.edu.tw/#login";
+                window.location.reload();
+            })
+            .then(function (response) {
+                window.location.href = "https://schoolplayground.tyc.edu.tw/#login";
+                window.location.reload();
+            });
+        }
+        function funEdit(opts) {
+			let defaults =  {
+				title: "",
+				url: "",
+				method: "put",
+				formData: null,
+				onUploadProgress: null,
+			};
+			opts = $.extend(true, {}, defaults, opts);
+
+			modalMessage.disable();
+			axios({
+				method: opts.method,
+				url: opts.url,
+				data: opts.formData,
+				onUploadProgress: opts.onUploadProgress,
+			})
+			.then(function(response) {
+				if( response.data.status == "success" ){
+					// theDataTable.ajax.reload();
+				}
+				else if( response.data.status == "error" ){
+					addModalTitleWithError(opts.title, response.data.message);
+				}
+				modalMessage.close();
+			})
+			.catch(function(error) {
+				addModalTitleWithError(opts.title, error);
+			})
+			.then(function () {
+				modalMessage.enable();
+			});
+		}
+    </script>
+
+    <!-- other import -->
+    
+<!--swiper -->
+<script src="https://schoolplayground.tyc.edu.tw/js/plugins/swiper/swiper.min.js"></script>
+<link rel="stylesheet" href="https://schoolplayground.tyc.edu.tw/js/plugins/swiper/swiper.min.css">
+<!--swiper END-->
+<script>
+  let currentPage = 1;
+  let param = getUrlVars();
+  if(typeof param['page'] !== "undefined") currentPage = parseInt(param['page']);
+
+  $(function() {
+    $("#div_space").css("height",$("#menu_title_div").height());
+    // :: Sliders Active Code
+    if ($.fn.owlCarousel) {
+        $('.popular-products-slides').owlCarousel({
+            items: 4,
+            margin: 30,
+            loop: true,
+            nav: false,
+            dots: false,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            smartSpeed: 1000,
+            responsive: {
+                0: {
+                    items: 1
+                },
+                576: {
+                    items: 2
+                },
+                768: {
+                    items: 3
+                },
+                992: {
+                    items: 4
+                }
+            }
+        });
+        $('.product_thumbnail_slides').owlCarousel({
+            items: 1,
+            margin: 0,
+            loop: true,
+            nav: true,
+            navText: ["<img src='img/core-img/long-arrow-left.svg' alt=''>", "<img src='img/core-img/long-arrow-right.svg' alt=''>"],
+            dots: false,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            smartSpeed: 1000
+        });
+    }
+
+    var swiper = new Swiper('.swiper-container',{
+        loop : true,
+        autoplay : true,
+        autoplayTimeout: 5000,
+    });
+  });
+
+</script>
+<style>
+    .back_menu{
+        width: 100%;
+        height: 74px;
+        background: #ecf9f4;
+        font-size: 1.428em;
+    }
+    .back_menu_content{
+        position: relative;
+        left:100px;
+        top: 20px;
+    }
+    .back_menu_click{
+        color: #338615;
+    }
+    .playground_main_title{
+        font-size: 2.571em;
+        color:  #338615;
+        font-weight: bold;
+        text-align: center;
+    }
+    .hr_div{
+        width: 100%;
+        height: 3px;
+        background: #f0f0f0;
+    }
+    .playground_show_img{
+        width: 100%;
+        height: 540px;
+        background: #cfd8e1;
+        border-radius: 6px;
+        border: solid 1px #cfd8e1;
+    }
+    .playground_show_title{
+        color: #4a7d98;
+        font-size: 2.285em;
+        font-weight: bold;
+    }
+    .playground_show_sub_title{
+        color: #000000;
+        font-size: 1.557em;
+        font-weight: bold;
+    }
+    .playground_show_content{
+        color: #9b9b9b;
+        font-size: 1.557em;
+        font-weight: normal;
+    }
+    .playground_show_content_lable{
+        color: #9b9b9b;
+        font-size: 0.929em;
+        font-weight: normal;
+    }
+    .swiper-container{
+        position:relative;
+        width:98%;
+    }
+    @media  screen and (max-width:768px) {
+        .back_menu{
+            font-size: 1em;
+        }
+        .back_menu_content{
+            left: 20px;
+        }
+        .section-padding-80{
+            padding-top: 20px;
+        }
+
+        .playground_main_title{
+            font-size: 2em;
+        }
+        .playground_show_title{
+            font-size: 2em;
+        }
+        .playground_show_sub_title{
+            font-size: 1em;
+        }
+        .playground_show_content{
+            font-size: 1em;
+        }
+    }
+</style>
+</head>
+
+<body style="background-color: #252525;">
+    <!-- Header -->
+    <script>
+let catalogs = new Array();
+let catalogs_byid = new Object();
+ 
+    catalogs[0] = {
+        id: 1,
+        title: "最新消息",
+        pid: 0,
+        children: new Array(),
+    };
+for(let i = 0; i < catalogs.length; i++) {
+    catalogs_byid[catalogs[i]['id']] = catalogs[i];
+}
+
+let catalogs_new = new Array();
+for(let i = 0; i < catalogs.length; i++) {
+    if(catalogs[i]['pid'] == 0) {
+        catalogs_new.push(catalogs[i]);
+        continue;
+    }
+    catalogs_byid[catalogs[i]['pid']]['children'].push(catalogs[i]);
+}
+catalogs = catalogs_new;
+$(function() {
+    'use strict';
+
+    var $window = $(window);
+
+    // :: ScrollUp Active Code
+
+
+    // :: Nav Active Code
+    if ($.fn.classyNav) {
+        $('#essenceNav').classyNav();
+    }
+
+    // :: Sticky Active Code
+    $window.on('scroll', function () {
+        if ($window.scrollTop() > 0) {
+            $('.header_area').addClass('sticky');
+        } else {
+            $('.header_area').removeClass('sticky');
+        }
+    });
+
+    // :: Nice Select Active Code
+    if ($.fn.niceSelect) {
+        $('select').niceSelect();
+    }
+
+    // :: wow Active Code
+    if ($window.width() > 767) {
+        new WOW().init();
+    }
+
+    // :: PreventDefault a Click
+    $("a[href='#']").on('click', function ($) {
+        $.preventDefault();
+    });
+
+    for(let i = 0; i < catalogs.length; i++) {
+        let ul = insertMenuCatalog(catalogs[i]);
+        $("#div_menu_catalogs").append(ul); 
+    }
+
+    let url = window.location.href;
+    if(url.indexOf('playground') > 0) $("#playground_icon").attr("src","/images/icons/menu-title-click.png");
+    else if(url.indexOf('news') > 0) $("#news_icon").attr("src","/images/icons/menu-title-click.png");
+    else if(url.indexOf('download') > 0) $("#download_icon").attr("src","/images/icons/menu-title-click.png");
+});
+
+function insertMenuCatalog(obj) {
+    let html = '';
+    html += '<li class="title">'+obj['title']+'</li>';
+    html += '<li><a href="/catalog/'+obj['id']+'">ALL</a></li>';
+    for(let i = 0; i < obj['children'].length; i++) {
+        html += '<li><a href="/catalog/'+obj['children'][i]['id']+'">'+obj['children'][i]['title']+'</a></li>';
+    }
+    
+    let ul = document.createElement('ul');
+    ul.setAttribute("class", "single-mega cn-col-4");
+    ul.innerHTML = html;
+    return ul;
+
+}
+
+function insertArticle(obj) {
+    let logo = "https://schoolplayground.tyc.edu.tw/images/public/placehold-photo.png";
+    if(typeof obj['image'] != "undefined" && obj['image'] != "") {
+        logo = obj['image'];
+    }
+
+    let html = '';
+    html += '  <div class="product-img">';
+    html += '       <a href="/product/'+obj['id']+'/details">';
+    html += '           <img src="'+logo+'" alt="">';
+    html += '       </a>';
+    //html += '      <img class="hover-img" src="'+logo+'" alt="">';
+    html += '      <div class="product-favourite">';
+        html += '          <a href="#" class="favme fa fa-heart" data-toggle="modal" data-target="#loginModal"></a>';
+        html += '      </div>';
+    html += '  </div>';
+    html += '  <div class="product-description">';
+    html += '      <span>topshop</span>';
+    html += '       <a href="/product/'+obj['id']+'/details">';
+    html += '         <h6>'+obj['title']+'</h6>';
+    html += '     </a>';
+    html += '      <p class="product-price">';
+    if(obj['discount'] < obj['price']) {
+        html += '<span class="old-price">$' + obj['price'] + '</span> $' + obj['discount'];
+    }
+    else html += '$' + obj['price'];
+    html += '     </p>';
+    html += '      <div class="hover-content">';
+    html += '          <div class="add-to-cart-btn">';
+    html += '              <a href="javascript:void(0);" onclick="addCartItem('+obj['id']+')" class="btn essence-btn">Add to Cart</a>';
+    html += '          </div>';
+    html += '      </div>';
+    html += '  </div>';
+    
+    let div = document.createElement('div');
+    div.setAttribute("class", "single-product-wrapper col-12 col-sm-6 col-lg-4");
+    div.innerHTML = html;
+    return div;
+}
+
+function setFavorite() {
+    }
+</script>
+<style>
+.menu_title {
+    position: relative;
+    width: 30px;
+    top: -20%;
+}
+#menu_title_div {
+    background: #fff url("/images/public/bg/menu-title.png");
+}
+#essenceNav{
+    width:100% !important;
+}
+</style>
+<!-- ##### Header Area Start ##### -->
+<header class="header_area">
+    <div class="classy-nav-container breakpoint-off align-items-center justify-content-between" id="menu_title_div">
+        <!-- Classy Menu -->
+        <nav class="classy-navbar" id="essenceNav">
+            <!-- Logo -->
+            <a class="nav-brand" href="/"><img src="/images/icons/logo.png" alt="桃園市政府教育局"></a>
+            <!-- Navbar Toggler -->
+            <div class="classy-navbar-toggler">
+                <span class="navbarToggler"><span></span><span></span><span></span></span>
+            </div>
+            <!-- Menu -->
+            <div class="classy-menu">
+                <!-- close btn -->
+                <div class="classycloseIcon">
+                    <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
+                </div>
+                <!-- Nav Start -->
+                <div class="classynav">
+                    <ul>
+                        <li title="兒童遊戲場">            
+                            <a href="/playground"><img class="menu_title" id="playground_icon" src="/images/icons/menu-title.png" alt="兒童遊戲場" title="兒童遊戲場">&nbsp;兒童遊戲場</a>            
+                        </li>
+                        <li title="最新消息">            
+                            <a href="/news"><img class="menu_title" id="news_icon" src="/images/icons/menu-title.png" alt="最新消息" title="最新消息">&nbsp;最新消息</a>            
+                        </li>
+                        <li title="相關連結">            
+                            <a href="/download"><img class="menu_title" id="download_icon" src="/images/icons/menu-title.png" alt="相關連結" title="相關連結">&nbsp;相關連結</a>            
+                        </li>     
+                        <li title="學校登入">            
+                            <a href="/b"><img class="menu_title" id="download_icon" src="/images/icons/menu-title.png" alt="學校登入" title="學校登入">&nbsp;學校登入</a>            
+                        </li>                                            
+                    </ul>
+                </div>
+                <!-- Nav End -->
+            </div>
+        </nav>
+
+
+
+    </div>
+</header>
+<!-- ##### Header Area End ##### -->
+    <script>
+let cart_items = new Array();
+let cart_items_byid = new Object();
+$(function() {
+    'use strict';
+
+    // :: Header Cart Active Code
+    var cartbtn1 = $('#essenceCartBtn');
+    var cartOverlay = $(".cart-bg-overlay");
+    var cartWrapper = $(".right-side-cart-area");
+    var cartbtn2 = $("#rightSideCart");
+    var cartOverlayOn = "cart-bg-overlay-on";
+    var cartOn = "cart-on";
+
+    cartbtn1.on('click', function () {
+        cartOverlay.toggleClass(cartOverlayOn);
+        cartWrapper.toggleClass(cartOn);
+    });
+    cartOverlay.on('click', function () {
+        $(this).removeClass(cartOverlayOn);
+        cartWrapper.removeClass(cartOn);
+    });
+    cartbtn2.on('click', function () {
+        cartOverlay.removeClass(cartOverlayOn);
+        cartWrapper.removeClass(cartOn);
+    });
+
+     
+    $("#btn_checkout").on('click', function () {
+        cartOverlay.removeClass(cartOverlayOn);
+        cartWrapper.removeClass(cartOn);
+    });
+        
+    checkCartItems();
+
+    // :: Nicescroll Active Code
+    if ($.fn.niceScroll) {
+        $(".cart-list, .cart-content").niceScroll();
+    }
+});
+
+function insertCartItem(obj) {
+    let logo = "https://schoolplayground.tyc.edu.tw/images/public/placehold-photo.png";
+    if(typeof obj['image'] != "undefined" && obj['image'] != "") {
+        logo = obj['image'];
+    }
+
+    let html = '';
+    html += '<a href="javascript:void(0);" class="product-image">';
+    html += '    <img src="'+logo+'" class="cart-thumb" alt="">';
+    html += '    <div class="cart-item-desc" data-number="'+obj['id']+'">';
+    html += '        <span class="product-remove"><i class="fa fa-close" aria-hidden="true"></i></span>';
+    html += '        <h6 class="mb-0">'+obj['title']+'</h6>';
+    html += '        <p class="price mt-0">';
+    if(obj['discount'] < obj['price']) html += '$' + obj['discount'];
+    else html += '$' + obj['price'];
+    html += '        </p>';
+    html += '    </div>';
+    html += '</a>';
+
+    let div = document.createElement('div');
+    div.setAttribute("class", "single-cart-item");
+    div.setAttribute("id", "cart_item_"+obj['id']);
+    div.innerHTML = html;
+    return div;
+}
+
+function checkCartItems() {
+    $(".cart-number").html(cart_items.length);
+    $(".cart-list").html('');
+    let cart = parseJSON(getCookie("cart"));
+    let subtotal = 0;
+    let discount = 0;
+    for(let i = 0; i < cart_items.length; i++) {
+        if(cart != null && typeof cart['items'][cart_items[i]['id']] != "undefined") {
+            cart_items[i]['count'] = cart['items'][cart_items[i]['id']];
+        }
+        let div = insertCartItem(cart_items[i]);
+        $(".cart-list").append(div);
+        if(cart_items[i]['discount'] < cart_items[i]['price']) {
+            discount += (cart_items[i]['price']-cart_items[i]['discount'])*cart_items[i]['count'];;
+        }
+        subtotal += cart_items[i]['price']*cart_items[i]['count'];
+    }
+    $("#subtotal").html('$'+subtotal);
+    if(discount == 0) $("#discount").html('$0');
+    else $("#discount").html('$-'+discount);
+    if(subtotal == 0) {
+        $("#total").html('$0');
+        $("#delivery").html('$0');
+    } else {
+        $("#total").html('$'+(subtotal-discount+60));
+        $("#delivery").html('$60');
+    }
+
+    $(".cart-item-desc").on('click', function () {
+        let id = $(this).data('number');
+        delCartItem(id);
+    });
+}
+
+function addCartItem(id, count) {
+    let cart = parseJSON(getCookie("cart"));
+    if(cart == null) {
+        cart = {
+            items: {},
+        }
+    }
+    if(typeof cart.items[id] === "undefined") {
+        cart.items[id] = 1;
+    } else {
+        cart.items[id]++;
+    }
+    if(typeof count !== "undefined") {
+        if(count == 0) return delCartItem(id);
+        cart.items[id] = count;
+    }
+
+    setCookie("cart", JSON.stringify(cart), 365);
+    if(typeof products_byid != "undefined") {
+        products_byid[id]['count'] = cart.items[id];
+        if(typeof cart_items_byid[id] == "undefined") {
+            cart_items.push(products_byid[id]);
+            cart_items_byid[id] = cart_items[cart_items.length-1];
+        }
+    }
+    if(typeof count !== "undefined") {
+        cart_items_byid[id]['count'] = count;
+    }
+    checkCartItems();
+}
+
+function delCartItem(id) {
+    $("#cart_item_"+id).remove();
+    for(let i = 0; i < cart_items.length; i++) {
+        if(cart_items[i]['id'] == id) {
+            cart_items.splice(i, 1);
+            break;
+        }
+    }
+
+    let cart = parseJSON(getCookie("cart"));
+    if(cart == null) {
+        cart = {
+            items: {},
+        }
+    }
+    if(typeof cart.items[id] !== "undefined") {
+        delete cart.items[id];
+    }
+    if(typeof cart_items_byid[id] !== "undefined") {
+        delete cart_items_byid[id];
+    }   
+    setCookie("cart", JSON.stringify(cart), 365);
+    checkCartItems();
+    if (typeof checkCartList === "function") { 
+        checkCartList();
+    }
+
+    $(".cart-number").html(cart_items.length);
+}
+</script>
+<!-- ##### Right Side Cart Area ##### -->
+<div class="cart-bg-overlay"></div>
+
+<div class="right-side-cart-area">
+
+    <!-- Cart Button -->
+    <div class="cart-button">
+        <a href="#" id="rightSideCart"><img src="/images/public/icons/bag.svg" alt=""> <span class="cart-number"></span></a>
+    </div>
+
+    <div class="cart-content d-flex">
+
+        <!-- Cart List Area -->
+        <div class="cart-list"></div>
+
+        <!-- Cart Summary -->
+        <div class="cart-amount-summary">
+
+            <h2>Summary</h2>
+            <ul class="summary-table">
+                <li><span>subtotal:</span> <span id="subtotal">$0</span></li>
+                <li><span>delivery:</span> <span id="delivery">60</span></li>
+                <li><span>discount:</span> <span id="discount">-0</span></li>
+                <li><span>total:</span> <span id="total">$0</span></li>
+            </ul>
+            <div class="checkout-btn mt-100">
+                                <a href="#" id="btn_checkout" class="btn essence-btn" data-toggle="modal" data-target="#loginModal">check out</a>
+                            </div>
+        </div>
+    </div>
+</div>
+<!-- ##### Right Side Cart End ##### -->
+    <div class="container-h100 bg-white">
+        <div id="div_space" class="bg-img background-overlay" style="width:100%"></div>
+<div class="back_menu">
+    <div class="back_menu_content"><label onclick="location.href='/';" style="cursor:pointer;"> 首頁</label> > <label onclick="location.href='/playground';" style="cursor:pointer;"> 兒童遊戲場 </label> > <label class="back_menu_click">市立自立國小</label></div>
+</div>
+<div class="top_catagory_area section-padding-80 clearfix">
+    <div class="container news_container" >
+        <div class="row justify-content-center" style="width:80%;">
+            <div class="col-12 playground_main_title">
+                市立自立國小
+            </div>
+            <div class="col-12" style="height:20px;">&nbsp;</div>
+
+        </div>
+                <div class="row">
+            <div class="col-md-12">
+                <div style="width:100%;">
+                    <div class="playground_show_img"><img src="/images/public/building.jpg"></div>
+                </div>
+            </div>
+        </div>
+        
+            </div>
+</div>
+
+    </div>
+
+    <!-- Footer -->
+    <style>
+.footer_area {
+    background: #91d5ba url("/images/public/bg/footer.png");
+}
+.footer_content {
+	position:relative;
+    color: #fff;
+	font-size: 1em;
+	text-align: center;
+}
+</style>
+<!-- ##### Footer Area Start ##### -->
+<footer class="footer_area clearfix">
+	<div class="container">
+		<div class="row footer_content">
+			<div class="col-md-6 col-xs-12">330206 桃園市桃園區縣府路1號14, 15樓</div>
+			<div class="col-md-6 col-xs-12">TEL：(03) 3322101 FAX：(03) 3358254</div>
+			<div class="col-md-6 col-xs-12">上班時間：星期一至星期五</div>
+			<div class="col-md-6 col-xs-12">上午8:00至12:00 下午13:00至17:00</div>
+			<div class="col-md-6 col-xs-12">桃園市政府教育局版權所有</div>
+			<div class="col-md-6 col-xs-12">CopyRight © 2020 Department of Education, Taoyuan. All Rights Reserved.</div>			
+		</div>
+	</div>
+</footer>
+<!-- ##### Footer Area End ##### -->
+
+<!-- Plugins js -->
+<script src="/js/public/plugins.js"></script>
+<!-- Classy Nav js -->
+<script src="/js/public/classy-nav.min.js"></script>
+
+
+
+</body>
+</html>
